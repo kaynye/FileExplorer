@@ -1,0 +1,64 @@
+<html>
+<script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<h3>Bienvenue</h3>
+<p>bon</p>
+<div id="elem"></div>
+<div></div>
+<table id="tableau" class="table table-condensed">
+    <tbody>
+		<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		</tr>
+    </tbody>
+  </table>
+</html>
+
+
+
+
+<script>
+var nbCell=0;
+var nbRow=0;
+var socket = io();
+var tab = document.getElementById("tableau");
+socket.emit("Connect");
+socket.on("yourFold",function(lFold){
+	if (nbCell<3){
+		tab.rows[nbRow].cells[nbCell].innerHTML=lFold;
+		nbCell++;
+	}else{
+	nbRow++;
+	nbCell=0;
+	var nouvelleLigne = document.getElementById("tableau").insertRow(-1);
+	nouvelleLigne.insertCell(0);
+	nouvelleLigne.insertCell(1);
+	nouvelleLigne.insertCell(2);
+	tab.rows[nbRow].cells[nbCell].innerHTML=lFold;
+	}
+	console.log(nbRow+" , "+nbCell);
+	console.log("Dos= "+lFold);
+	
+});
+socket.on("yourFile",function(file){
+	if (nbCell<3){
+		tab.rows[nbRow].cells[nbCell].innerHTML=file;
+		nbCell++;
+	}else{
+	nbRow++;
+	nbCell=1;
+	var nouvelleLigne = document.getElementById("monBody").insertRow(-1);
+	nouvelleLigne.insertCell(0);
+	nouvelleLigne.insertCell(1);
+	nouvelleLigne.insertCell(2);
+	tab.rows[nbRow].cells[nbCell].innerHTML=file;
+	}
+	console.log("File= "+file);
+	console.log(nbRow+" , "+nbCell);
+});
+
+</script>

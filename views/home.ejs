@@ -7,8 +7,9 @@
 <p>bon</p>
 <div id="elem"></div>
 <div></div>
+
 <table id="tableau" class="table table-condensed">
-    <tbody>
+    <tbody id="myFile">
 		<tr>
 		<td></td>
 		<td></td>
@@ -29,7 +30,7 @@ var tab = document.getElementById("tableau");
 socket.emit("Connect");
 socket.on("yourFold",function(lFold){
 	if (nbCell<3){
-		tab.rows[nbRow].cells[nbCell].innerHTML=lFold;
+		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 class="folder" onclick="openFolder(this)"><img src="folder.png">'+lFold+'</h2>';
 		nbCell++;
 	}else{
 	nbRow++;
@@ -38,27 +39,43 @@ socket.on("yourFold",function(lFold){
 	nouvelleLigne.insertCell(0);
 	nouvelleLigne.insertCell(1);
 	nouvelleLigne.insertCell(2);
-	tab.rows[nbRow].cells[nbCell].innerHTML=lFold;
+	tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 class="folder" onclick="openFolder(this)"><img src="folder.png">'+lFold+'</h2>';
 	}
-	console.log(nbRow+" , "+nbCell);
-	console.log("Dos= "+lFold);
+	//console.log("dos= "+nbRow+" , "+nbCell);
+	//console.log("Dos= "+lFold);
 	
 });
 socket.on("yourFile",function(file){
 	if (nbCell<3){
-		tab.rows[nbRow].cells[nbCell].innerHTML=file;
+		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2><img src="file.png" class="folder">'+file+'</h2>';
 		nbCell++;
 	}else{
 	nbRow++;
-	nbCell=1;
-	var nouvelleLigne = document.getElementById("monBody").insertRow(-1);
+	nbCell=0;
+	var nouvelleLigne = document.getElementById("tableau").insertRow(-1);
 	nouvelleLigne.insertCell(0);
 	nouvelleLigne.insertCell(1);
 	nouvelleLigne.insertCell(2);
-	tab.rows[nbRow].cells[nbCell].innerHTML=file;
+	tab.rows[nbRow].cells[nbCell].innerHTML+='<h2><img src="file.png" >'+file+'</h2>';
 	}
-	console.log("File= "+file);
-	console.log(nbRow+" , "+nbCell);
+	//console.log("File= "+file);
+	//console.log("File= "+nbRow+" , "+nbCell);
+});
+
+
+function openFolder(name){
+	console.log(name.innerText);
+	socket.emit('openFold',name.innerText);
+}
+
+socket.on('clear',function(){
+	$('#myFile').empty();
+	nbCell=0;
+	nbRow=0;
+	var nouvelleLigne = document.getElementById("tableau").insertRow(-1);
+	nouvelleLigne.insertCell(0);
+	nouvelleLigne.insertCell(1);
+	nouvelleLigne.insertCell(2);
 });
 
 </script>

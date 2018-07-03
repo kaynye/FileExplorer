@@ -6,15 +6,15 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/siofu/client.js"></script>
 <script src="/js/contextMenu.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <h3>Bienvenue</h3>
 <Button onclick="retour()">retour</button>
 <Button onclick="addFile()">new file</button>
 <Button onclick="addFolder()">new Folder</button>
-<p>bon</p>
 <div id="elem"></div>
-<div id="source"></div>
+<div id="source" hidden></div>
 <div></div>
 
 <table id="tableau" class="table table-condensed">
@@ -58,9 +58,12 @@ var nbRow=0;
 var socket = io();
 var tab = document.getElementById("tableau");
 socket.emit("Connect");
+var uploader = new SocketIOFileUpload(socket);
+uploader.listenOnDrop(document.getElementById("tableau"));
+
 socket.on("yourFold",function(lFold){
 	if (nbCell<3){
-		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+lFold+' "class="elem" class="folder" onclick="openFolder(this.innerText)"><img src="folder.png" source="'+lFold+'">'+lFold+'</h2>';
+		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+lFold+' " class="elem folder" ondblclick="openFolder(this.innerText)"><img id="nom" class="folderImg" ondrop="dropFile(event)" src="folder.png" source="'+lFold+'">'+lFold+'</h2>';
 		nbCell++;
 	}else{
 	nbRow++;
@@ -69,7 +72,7 @@ socket.on("yourFold",function(lFold){
 	nouvelleLigne.insertCell(0);
 	nouvelleLigne.insertCell(1);
 	nouvelleLigne.insertCell(2);
-		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+lFold+'"class="elem" class="folder" onclick="openFolder(this.innerText)"><img src="folder.png" source="'+lFold+'">'+lFold+'</h2>';
+		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+lFold+'"class="elem folder"  ondblclick="openFolder(this.innerText)"><img src="folder.png" class="folderImg" source="'+lFold+'">'+lFold+'</h2>';
 	}
 	//console.log("dos= "+nbRow+" , "+nbCell);
 	//console.log("Dos= "+lFold);
@@ -77,16 +80,50 @@ socket.on("yourFold",function(lFold){
 });
 socket.on("yourFile",function(file){
 	if (nbCell<3){
-		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem" class="file"><img src="file.png" source="'+file+'">'+file+'</h2>';
+		if(file.endsWith('.xlsx') || file.endsWith('.xls')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="excel.png" ondragstart="drag(event,this)" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.png')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="png.png" ondragstart="drag(event,this)" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.jpg')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="jpg.png" ondragstart="drag(event,this)" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.pdf')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="pdf.png" ondragstart="drag(event,this)" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.js')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="js.png"  ondragstart="drag(event,this)" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.html') || file.endsWith('.ejs')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="html.png" ondragstart="drag(event,this)"source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.json')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="json.png" ondragstart="drag(event,this)" source="'+file+'">'+file+'</h2>';
+		}
+		else{
+		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="file.png" ondragstart="drag(event,this)" source="'+file+'">'+file+'</h2>';
+		}
 		nbCell++;
 	}else{
-	nbRow++;
-	nbCell=0;
-	var nouvelleLigne = document.getElementById("tableau").insertRow(-1);
-	nouvelleLigne.insertCell(0);
-	nouvelleLigne.insertCell(1);
-	nouvelleLigne.insertCell(2);
-	tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem" class="file"><img src="file.png" source="'+file+'">'+file+'</h2>';
+		nbRow++;
+		nbCell=0;
+		var nouvelleLigne = document.getElementById("tableau").insertRow(-1);
+		nouvelleLigne.insertCell(0);
+		nouvelleLigne.insertCell(1);
+		nouvelleLigne.insertCell(2);
+		if(file.endsWith('.xlsx') || file.endsWith('.xls')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="excel.png" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.png')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="png.png" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.jpg')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="jpg.png" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.pdf')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="pdf.png" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.js')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="js.png" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.html') || file.endsWith('.ejs')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="html.png" source="'+file+'">'+file+'</h2>';
+		}else if(file.endsWith('.json')){
+			tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="json.png" source="'+file+'">'+file+'</h2>';
+		}
+		else{
+		tab.rows[nbRow].cells[nbCell].innerHTML+='<h2 source="'+file+'" class="elem file" ><img src="file.png" source="'+file+'">'+file+'</h2>';
+		}
 	}
 	//console.log("File= "+file);
 	//console.log("File= "+nbRow+" , "+nbCell);
@@ -155,78 +192,52 @@ document.oncontextmenu = function (event) {//desable context menu on rightClick
 }
 
 
-$(document).on('dragenter', '#tableau', function() {
-            $(this).css('border', '3px dashed red');
+$(document).on('dragenter', '#tableau', function(e) {
+			if (!e.currentTarget.classList.contains("table")){
+            $(this).css('background-color', 'b2cfff');
+            $(this).css('opacity', '0.7');
+			}
             return false;
 });
  
+
+
 $(document).on('dragover', '#tableau', function(e){
             e.preventDefault();
             e.stopPropagation();
-            $(this).css('border', '3px dashed red');
+            if (!e.currentTarget.classList.contains("table")){
+            $(this).css('background-color', 'b2cfff');
+            $(this).css('opacity', '0.7');
+			}
             return false;
 });
  
 $(document).on('dragleave', '#tableau', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            $(this).css('border', '3px dashed #BBBBBB');
+            $(this).css('background-color', 'white');
+            $(this).css('opacity', '1');
             return false;
 });
 
 $(document).on('drop', '#tableau', function(e) {
-            if(e.originalEvent.dataTransfer){
-                       if(e.originalEvent.dataTransfer.files.length) {
-                                   // Stop the propagation of the event
-                                   e.preventDefault();
-                                   e.stopPropagation();
-                                   $(this).css('border', '3px dashed green');
-								   console.log(e.originalEvent.dataTransfer.files);
-								   console.log(e);
-								   var files = e.target.files || e.originalEvent.dataTransfer.files;
-
-									// process all File objects
-									for (var i = 0, file; file = files[i]; i++) {
-									if (file.type.indexOf("text") == 0) {
-										var reader = new FileReader();
-										reader.readAsText(file);
-										console.log(reader);
-										console.log(reader['result']);
-										console.log(reader.result);
-										console.log(files[i]['name']);
-										console.log(file.result);
-										socket.emit("addFile",files[i]['name'],file.result)
-										console.log('aaaaaaaaa')
-									}
-
-									}
-								   
-									//console.log(reader);
-                                   // Main function to upload
-                                   //upload(e.originalEvent.dataTransfer.files);
-                       }  
-            }
-            else {
-                       $(this).css('border', '3px dashed #BBBBBB');
-            }
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).css('background-color', 'white');
+            $(this).css('opacity', '1');
             return false;
 });
+function dropFile(e){
+	name=e.dataTransfer.getData("fileName");
+	fold=e.path[0].getAttribute('source');
+	if (name!='null' && name!="undefined" && name!=""){
+		if (fold!='null' && fold!="undefined" && fold!=""){
+			socket.emit('move',fold,name);
+		}
+	}
+}
 
-function upload(files) {
-            var f = files[0] ;
- 
-            // Only process image files.
-            if (!f.type.match('image/jpeg')) {
-                       alert('The file must be a jpeg image') ;
-                       return false ;
-            }
-            var reader = new FileReader();
- 
-            // When the image is loaded,
-            // run handleReaderLoad function
-            reader.onload = handleReaderLoad;
- 
-            // Read in the image file as a data URL.
-            reader.readAsDataURL(f);   			
+function drag(ev,elem) {
+    ev.dataTransfer.setData("fileName", elem.getAttribute('source'));
 }
 </script>

@@ -6,9 +6,13 @@ var express = require('express');
 
 var app = express();
 app.use('/static', express.static(__dirname + '/public'));
+
 app.use( express.static( "static" ) );
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+var siofu = require("socketio-file-upload");
+app.use(siofu.router);
+
 //<liste=getTree();
 
 //console.log(liste);
@@ -20,24 +24,15 @@ app.get('/', function(req, res) {
 	//}
 });
 
-/* FS.read("hello.txt", //lire
-    flags: "r"
-}).then(function (hello) {
-    console.log(hello);
-})
- */
-// FS.write("hello", "Hello, World!\n")//creer
-// .then(function () {
-    // return FS.read("hello")
-// })
-// .then(function (hello) {
-    // expect(hello).toBe("Hello, World!\n")
-// });
-
-
-
 io.sockets.on('connection', function (socket) {
 	socket.root=".";//point de depart de l'application
+	var uploader = new siofu();
+	uploader.on("saved", function(event){
+		event.file.clientDetail.hello = "world";
+		goTo(socket.root);
+	});
+	uploader.dir = ".";
+	uploader.listen(socket);
 	function getTree(root){
 	 FS.list(root).then(function (hello) {//tree
 		//console.log(stringify(hello));
@@ -62,7 +57,6 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('saveFile',function(file,value){
 		FS.write(socket.root+'/'+file, value).then(function () {//creer
-				
 		})
 	});
 	
@@ -96,7 +90,7 @@ io.sockets.on('connection', function (socket) {
 		FS.rename(socket.root+'/'+fold,newLien).then(function () {//renaming
 				goTo(socket.root);
 		});
-		console.log('renomage fini')
+		console.log('renomage fini');
 	});
 	
 	socket.on('createFolder',function(nom){
@@ -119,8 +113,19 @@ io.sockets.on('connection', function (socket) {
 		})
 	});
 	
+	socket.on('move',function(fold,name){
+		source=socket.root+'/'+name;
+		target=socket.root+'/'+fold+'/'+name;
+		console.log(source);
+		console.log(target);
+		FS.move(source,target).then(function () {//creer
+				goTo(socket.root);
+		})
+	});
+	
 	function goTo(root){
 		socket.root=root;
+		uploader.dir = root;
 		lis=root.split("/");
 		if(lis[0]!=".." || root[0]!="/" || lis[0]!="~"){
 			socket.emit("clear");
@@ -128,7 +133,7 @@ io.sockets.on('connection', function (socket) {
 				socket.liste=nListe;
 				console.log(nListe);
 				//getListDoc();
-				for (file in socket.liste){
+			for (file in socket.liste){
 				direc(socket.root+"/"+socket.liste[file],socket.liste[file]);
 			}
 			for (file in socket.liste){
